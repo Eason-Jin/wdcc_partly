@@ -68,31 +68,57 @@
   color: #34495e;
 }
 
-.example-images {
+/* Updated image section styles - now using links instead of inline images */
+.image-links {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   margin-top: 12px;
 }
 
-.example-image-container {
-  width: calc(50% - 6px);
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid #ecf0f1;
+.image-link-item {
+  display: flex;
+  align-items: center;
 }
 
-.example-image {
+.image-link {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: 1px solid #dce1e8;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #3498db;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
   width: 100%;
-  height: auto;
-  display: block;
+  text-align: left;
 }
 
-.image-description {
-  padding: 8px;
-  font-size: 12px;
+.image-link:hover {
+  background-color: #f8f9fa;
+  border-color: #3498db;
+  color: #2980b9;
+}
+
+.image-icon {
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.image-description-inline {
+  margin-left: 4px;
   color: #7f8c8d;
-  background-color: #f9f9f9;
+  font-size: 13px;
+  font-style: italic;
 }
 
-/* Remove custom scrollbar styles */
+/* Remove the old image styles that are no longer needed */
+.example-images,
+.example-image-container,
+.example-image,
+.image-description {
+  display: none;
+}

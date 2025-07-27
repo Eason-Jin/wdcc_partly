@@ -76,21 +76,23 @@ const PartInfoPanel: React.FC<PartInfoProps> = ({ partInfo }) => {
        partInfo.representation.examples.length > 0 && (
         <div className="part-section">
           <h3 className="section-title">Images</h3>
-          <div className="example-images">
+          <div className="image-links">
             {partInfo.representation.examples.map((example, index) => (
-              <div 
-                key={index} 
-                className="example-image-container"
-                onClick={() => openImageModal(example.image_url, example.description)}
-              >
-                <img 
-                  src={example.image_url} 
-                  alt={`${getName()} example ${index + 1}`}
-                  className="example-image"
-                />
-                {example.description && (
-                  <div className="image-description">{example.description}</div>
-                )}
+              <div key={index} className="image-link-item">
+                <button 
+                  className="image-link"
+                  onClick={() => openImageModal(example.image_url, example.description)}
+                >
+                  <svg className="image-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19M19,19H5V5H19M13.96,12.29L11.21,15.83L9.25,13.47L6.5,17H17.5L13.96,12.29Z" />
+                  </svg>
+                  View Image {index + 1}
+                  {example.description && (
+                    <span className="image-description-inline">
+                      - {example.description}
+                    </span>
+                  )}
+                </button>
               </div>
             ))}
           </div>
