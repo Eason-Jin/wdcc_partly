@@ -19,14 +19,14 @@ function CarModel() {
   useEffect(() => {
     if (sceneRef.current) {
       // Add a point marker on the car
-      const rearCutPosition = new THREE.Vector3(15, 42, -80); // Adjust the position based on the model's scale and orientation
+      const rearCutPosition = new THREE.Vector3(0, 42, -80); // Adjust the position based on the model's scale and orientation
       const rearCutMarker = addInteractivePoint('RearCutMarker', rearCutPosition, 'Rear Cut');
       rearCutMarker.scale.set(20, 20, 20); 
       sceneRef.current.add(rearCutMarker);
 
-      const tailboardPosition = new THREE.Vector3(15, 42, -90); // Adjust the position based on the model's scale and orientation
+      const tailboardPosition = new THREE.Vector3(0, 30, -102);
       const tailboardMarker = addInteractivePoint('tailboardMarker', tailboardPosition, 'Tailboard Assembly');
-      rearCutMarker.scale.set(20, 20, 20); 
+      tailboardMarker.scale.set(20, 20, 20); 
       sceneRef.current.add(tailboardMarker);
     }
   }, []);
