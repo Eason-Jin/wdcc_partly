@@ -17,6 +17,7 @@ export const PartContextProvider: React.FC<{ children: ReactNode }> = ({
     const [defaultParts, setDefaultParts] = useState<Part[]>([]);
 
     function convertJson(jsonString: string): Part {
+        console.log("Converting JSON to Part:", jsonString);
         const jsonData = JSON.parse(jsonString);
 
         const nodes = jsonData.nodes;
@@ -56,7 +57,7 @@ export const PartContextProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     async function initaliseDefaultParts() {
-        const root = "GHCA47";
+        const root = "GHCA959";
         try {
             const rootPart = await fetchPart(root);
             if (!rootPart) {
@@ -79,6 +80,7 @@ export const PartContextProvider: React.FC<{ children: ReactNode }> = ({
 
                 for (const child of currentPart.children || []) {
                     if (!visited.has(child)) {
+                        console.log(`Fetching child part: ${child}`);
                         const childPart = await fetchPart(child);
                         if (childPart) {
                             queue.push(childPart);
