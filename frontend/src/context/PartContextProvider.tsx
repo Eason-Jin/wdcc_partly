@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { useState } from "react";
 import { PartContext } from "./PartContext";
 import type { Part } from "../types/part";
 import axios from "axios";
@@ -8,7 +8,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export interface PartContextType {
     convertJson: (json: string) => Part;
+    initaliseDefaultParts: () => void;
     defaultParts: Part[];
+    setDefaultParts: Dispatch<SetStateAction<Part[]>>;
 }
 
 export const PartContextProvider: React.FC<{ children: ReactNode }> = ({
@@ -95,15 +97,13 @@ export const PartContextProvider: React.FC<{ children: ReactNode }> = ({
         }
     }
 
-    useEffect(() => {
-        initaliseDefaultParts();
-    });
-
     return (
         <PartContext.Provider
             value={{
                 convertJson,
+                initaliseDefaultParts,
                 defaultParts,
+                setDefaultParts,
             }}
         >
             {children}

@@ -5,7 +5,7 @@ import path from "path";
 
 const router = express.Router();
 
-const USE_LOCAL_DATA = true;
+const USE_LOCAL_DATA = false;
 const FILE_PATH = path.resolve(__dirname, "../data/world_tree.json");
 
 /**
