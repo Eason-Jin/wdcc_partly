@@ -18,7 +18,7 @@ const WorldTree: React.FC<WorldTreeProps> = ({ onSelectNode, selectedNode }) => 
     const fetchTree = async () => {
       try {
         setLoading(true);
-        const data = await getWorldTree(2); // Get first 2 layers initially
+        const data = await getWorldTree(5); // Changed from 2 to 5 layers
         setTreeData(data.nodes || {});
         setRootNodes(data.root_nodes || []);
         setLoading(false);
