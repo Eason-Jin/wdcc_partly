@@ -28,6 +28,11 @@ function CarModel() {
       const tailboardMarker = addInteractivePoint('tailboardMarker', tailboardPosition, 'Tailboard Assembly');
       tailboardMarker.scale.set(20, 20, 20); 
       sceneRef.current.add(tailboardMarker);
+
+      const rearWindowPosition = new THREE.Vector3(0, 45, -55); // Adjust the position based on the model's scale and orientation
+      const rearWindowMarker = addInteractivePoint('rearWindowMarker', rearWindowPosition, 'Rear Window');
+      rearWindowMarker.scale.set(20, 20, 20); 
+      sceneRef.current.add(rearWindowMarker);
     }
   }, []);
 
