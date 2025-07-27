@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import './SearchBox.css';
 import type { Part } from '../../types/part';
-import axios from 'axios';
+import { dummyParts } from '../../assets/data';
+
 
 interface SearchBoxProps {
   onSelectPart: (partId: string, partDetails?: Part) => void;
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 const SearchBox: React.FC<SearchBoxProps> = ({ onSelectPart }) => {
   const [query, setQuery] = useState<string>('');
@@ -15,18 +14,27 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSelectPart }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const localSearch = (query: string): Part[] => {
+    if (!query.trim()) return [];
+    const lowerQuery = query.toLowerCase();
+    return dummyParts.filter(part =>
+      part.names.toLowerCase().includes(lowerQuery) ||
+      part.id.toLowerCase().includes(lowerQuery) ||
+      (part.type.name && part.type.name.toLowerCase().includes(lowerQuery)) ||
+      (part.position.position && part.position.position.toLowerCase().includes(lowerQuery))
+    );
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
 
     setLoading(true);
     setError(null);
-    
+    console.log('Searching for:', query);
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/search`, {
-        params: { query }
-        });
-      setResults(response.data);
+      const response = localSearch(query);
+      setResults(response);
     } catch (err) {
       setError('Failed to search parts. Please try again.');
       console.error('Search error:', err);
@@ -50,8 +58,8 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSelectPart }) => {
           onChange={(e) => setQuery(e.target.value)}
           className="search-input"
         />
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className={`search-button ${loading ? 'loading' : ''}`}
           disabled={loading}
         >
@@ -67,13 +75,13 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSelectPart }) => {
       </form>
 
       {error && <div className="search-error">{error}</div>}
-      
+
       {results.length > 0 && (
         <div className="search-results">
           <h3>Results ({results.length})</h3>
           <div className="results-list">
             {results.map(part => (
-              <div 
+              <div
                 key={part.id}
                 className="result-item"
                 onClick={() => onSelectPart(part.id, part)}
@@ -83,10 +91,10 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSelectPart }) => {
                 </div>
                 {part.representation?.examples && part.representation.examples.length > 0 && (
                   <div className="result-thumbnail">
-                    <img 
-                      src={part.representation.examples[0].image_url} 
-                      alt={getName(part)} 
-                      className="thumbnail-image" 
+                    <img
+                      src={part.representation.examples[0].image_url}
+                      alt={getName(part)}
+                      className="thumbnail-image"
                     />
                   </div>
                 )}
