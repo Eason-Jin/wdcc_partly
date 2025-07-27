@@ -24,5 +24,7 @@ export function addInteractivePoint(
   marker.name = name;
   marker.position.copy(position);
   marker.userData = { info };
+  marker.scale.set(20, 20, 20);
+
   return marker;
 }

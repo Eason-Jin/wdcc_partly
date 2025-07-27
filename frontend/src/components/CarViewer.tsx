@@ -1,8 +1,10 @@
-import React, { Suspense, useRef, useEffect } from 'react'
+import { Suspense, useRef, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, useGLTF } from '@react-three/drei'
 import * as THREE from 'three';
 import { addInteractivePoint } from './addInteractivePoint';
+import type { InteractiveNode } from '../types/part';
+import { dummyParts } from '../assets/data';
 
 function CarModel() {
   const gltf = useGLTF('/carModel/scene.gltf') // 注意路径是相对 public 的
@@ -18,21 +20,30 @@ function CarModel() {
 
   useEffect(() => {
     if (sceneRef.current) {
-      // Add a point marker on the car
-      const rearCutPosition = new THREE.Vector3(0, 42, -80); // Adjust the position based on the model's scale and orientation
-      const rearCutMarker = addInteractivePoint('RearCutMarker', rearCutPosition, 'Rear Cut');
-      rearCutMarker.scale.set(20, 20, 20);
-      sceneRef.current.add(rearCutMarker);
+      const rearCutPosition = new THREE.Vector3(0, 42, -80);
+      const rearCutNode: InteractiveNode = {
+        position: rearCutPosition,
+        marker: addInteractivePoint('RearCutMarker', rearCutPosition, 'Rear Cut'),
+        part: dummyParts.find(part => part.id === 'GHCA959')!
+      }
+      sceneRef.current.add(rearCutNode.marker);
 
       const tailboardPosition = new THREE.Vector3(0, 30, -102);
-      const tailboardMarker = addInteractivePoint('tailboardMarker', tailboardPosition, 'Tailboard Assembly');
-      tailboardMarker.scale.set(20, 20, 20);
-      sceneRef.current.add(tailboardMarker);
+
+      const tailboardNode: InteractiveNode = {
+        position: tailboardPosition,
+        marker: addInteractivePoint('tailboardMarker', tailboardPosition, 'Tailboard Assembly'),
+        part: dummyParts.find(part => part.id === 'GHCA9460')!
+      }
+      sceneRef.current.add(tailboardNode.marker);
 
       const rearWindowPosition = new THREE.Vector3(0, 45, -55); // Adjust the position based on the model's scale and orientation
-      const rearWindowMarker = addInteractivePoint('rearWindowMarker', rearWindowPosition, 'Rear Window');
-      rearWindowMarker.scale.set(20, 20, 20);
-      sceneRef.current.add(rearWindowMarker);
+      const rearWindowNode: InteractiveNode = {
+        position: rearWindowPosition,
+        marker: addInteractivePoint('rearWindowMarker', rearWindowPosition, 'Rear Window Assembly'),
+        part: dummyParts.find(part => part.id === 'GHCA9436')!
+      }
+      sceneRef.current.add(rearWindowNode.marker);
     }
   }, []);
 

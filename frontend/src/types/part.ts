@@ -1,3 +1,11 @@
+import * as THREE from 'three';
+
+export interface InteractiveNode {
+    position: THREE.Vector3;
+    marker: THREE.Mesh;
+    part: Part;
+}
+
 export interface Part {
     id: string; // root_node
     type: PartType;
