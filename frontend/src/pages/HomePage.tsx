@@ -1,34 +1,67 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from 'react';
+import Layout from '../components/Layout/Layout';
+import SearchBox from '../components/SearchBox/SearchBox';
+import WorldTree from '../components/WorldTree/WorldTree';
 import CarViewer from '../components/CarViewer';
+import PartInfoPanel from '../components/PartInfoPanel/PartInfoPanel';
+import Modal from '../components/Modal/Modal'; 
+import { getPartInfo, GHCANode } from '../services/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+const HomePage: React.FC = () => {
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [modalPartInfo, setModalPartInfo] = useState<GHCANode | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-export default function HomePage() {
-    const [data, setData] = useState(String);
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/api/auth`); // Adjust the endpoint as needed
-                setData(JSON.stringify(response.data, null, 2));
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-        fetchData();
-    }, []);
+  const openPartModal = (partInfo: GHCANode) => {
+    setModalPartInfo(partInfo);
+    setIsModalOpen(true);
+  };
 
-    return (
-        <div>
-            <h1>Home Page</h1>
-                <div style={{ height: '100vh', width: '100vw' }}>
-                <CarViewer />
-                </div>
-            {data ? (
-                <pre>{data}</pre>
-            ) : (
-                <p>Loading...</p>
-            )}
-        </div>
-    );
-}
+  const closePartModal = () => {
+    setIsModalOpen(false);
+    setModalPartInfo(null);
+  };
+
+  const handleSelectNode = (nodeId: string) => {
+    setSelectedNode(nodeId);
+    
+    getPartInfo(nodeId).then(openPartModal).catch(err => console.error(err));
+  };
+
+  const handleSelectPartFromSearch = (partId: string, partDetails?: GHCANode) => {
+    setSelectedNode(partId); 
+    if (partDetails) {
+      openPartModal(partDetails);
+    } else {
+      getPartInfo(partId).then(openPartModal).catch(err => console.error(err));
+    }
+  };
+
+  
+  const sidebarContent = (
+    <>
+      <SearchBox onSelectPart={handleSelectPartFromSearch} />
+      <div className="sidebar-divider"></div>
+      <WorldTree onSelectNode={handleSelectNode} selectedNode={selectedNode} />
+    </>
+  );
+
+  
+  const mainContent = (
+    <CarViewer selectedPart={selectedNode} />
+  );
+
+  return (
+    <>
+      <Layout 
+        sidebar={sidebarContent}
+        content={mainContent}
+      />
+      <Modal isOpen={isModalOpen} onClose={closePartModal}>
+        {modalPartInfo && <PartInfoPanel partInfo={modalPartInfo} />}
+      </Modal>
+    </>
+  );
+};
+
+export default HomePage;
