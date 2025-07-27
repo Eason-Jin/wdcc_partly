@@ -8,7 +8,7 @@ export default function HomePage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(`${API_BASE_URL}/api/auth`); // Adjust the endpoint as needed
+                const response = await axios.get(`${API_BASE_URL}/api/tree`);
                 setData(JSON.stringify(response.data, null, 2));
             } catch (error) {
                 console.error("Error fetching data:", error);
