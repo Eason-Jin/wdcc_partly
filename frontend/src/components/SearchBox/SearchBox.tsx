@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { searchParts, GHCANode } from '../../services/api';
 import './SearchBox.css';
+import type { Part } from '../../types/part';
+import axios from 'axios';
 
 interface SearchBoxProps {
-  onSelectPart: (partId: string, partDetails?: GHCANode) => void;
+  onSelectPart: (partId: string, partDetails?: Part) => void;
 }
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 const SearchBox: React.FC<SearchBoxProps> = ({ onSelectPart }) => {
   const [query, setQuery] = useState<string>('');
-  const [results, setResults] = useState<GHCANode[]>([]);
+  const [results, setResults] = useState<Part[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,8 +23,10 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSelectPart }) => {
     setError(null);
     
     try {
-      const searchResults = await searchParts(query);
-      setResults(searchResults || []);
+      const response = await axios.get(`${API_BASE_URL}/api/search`, {
+        params: { query }
+        });
+      setResults(response.data);
     } catch (err) {
       setError('Failed to search parts. Please try again.');
       console.error('Search error:', err);
@@ -30,9 +35,8 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSelectPart }) => {
     }
   };
 
-  const getName = (part: GHCANode): string => {
-    const enName = part.names.find(n => n.language.startsWith('en'));
-    return enName ? enName.value : 'Unknown Part';
+  const getName = (part: Part): string => {
+    return part.names;
   };
 
   return (
@@ -76,14 +80,6 @@ const SearchBox: React.FC<SearchBoxProps> = ({ onSelectPart }) => {
               >
                 <div className="result-content">
                   <h4 className="result-title">{getName(part)}</h4>
-                  {part.aliases && part.aliases.length > 0 && (
-                    <p className="result-aliases">
-                      Also known as: {part.aliases
-                        .filter(a => a.language.startsWith('en'))
-                        .map(a => a.value)
-                        .join(', ')}
-                    </p>
-                  )}
                 </div>
                 {part.representation?.examples && part.representation.examples.length > 0 && (
                   <div className="result-thumbnail">

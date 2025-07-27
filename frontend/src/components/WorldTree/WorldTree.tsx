@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './WorldTree.css';
-import { getWorldTree, GHCANode } from '../../services/api';
+import { dummyParts } from '../../assets/data';
+import type { Part } from '../../types/part';
 
 interface WorldTreeProps {
   onSelectNode: (nodeId: string) => void;
@@ -8,7 +9,7 @@ interface WorldTreeProps {
 }
 
 const WorldTree: React.FC<WorldTreeProps> = ({ onSelectNode, selectedNode }) => {
-  const [treeData, setTreeData] = useState<Record<string, GHCANode>>({});
+  const [treeData, setTreeData] = useState<Part[]>(dummyParts);
   const [rootNodes, setRootNodes] = useState<string[]>([]);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState<boolean>(true);
@@ -18,9 +19,8 @@ const WorldTree: React.FC<WorldTreeProps> = ({ onSelectNode, selectedNode }) => 
     const fetchTree = async () => {
       try {
         setLoading(true);
-        const data = await getWorldTree(5); // Changed from 2 to 5 layers
-        setTreeData(data.nodes || {});
-        setRootNodes(data.root_nodes || []);
+        setTreeData(dummyParts);
+        setRootNodes(treeData.filter(part => !part.parent).map(part => part.id));
         setLoading(false);
       } catch (err) {
         setError('Failed to load World Tree data');
@@ -30,7 +30,7 @@ const WorldTree: React.FC<WorldTreeProps> = ({ onSelectNode, selectedNode }) => 
     };
 
     fetchTree();
-  }, []);
+  }, [treeData]);
 
   const toggleNode = (nodeId: string) => {
     const newExpandedNodes = new Set(expandedNodes);
@@ -42,13 +42,12 @@ const WorldTree: React.FC<WorldTreeProps> = ({ onSelectNode, selectedNode }) => 
     setExpandedNodes(newExpandedNodes);
   };
 
-  const getNodeName = (node: GHCANode): string => {
-    const enName = node.names.find(n => n.language.startsWith('en'));
-    return enName ? enName.value : 'Unknown';
+  const getNodeName = (node: Part): string => {
+    return node.names;
   };
 
   const renderNode = (nodeId: string, level: number = 0) => {
-    const node = treeData[nodeId];
+    const node = treeData.find(part => part.id === nodeId);
     if (!node) return null;
 
     const hasChildren = node.children && node.children.length > 0;
@@ -57,12 +56,12 @@ const WorldTree: React.FC<WorldTreeProps> = ({ onSelectNode, selectedNode }) => 
 
     return (
       <div key={nodeId} className="tree-node-container" style={{ paddingLeft: `${level * 16}px` }}>
-        <div 
+        <div
           className={`tree-node ${isSelected ? 'selected' : ''}`}
           onClick={() => onSelectNode(nodeId)}
         >
           {hasChildren && (
-            <span 
+            <span
               className={`expand-icon ${isExpanded ? 'expanded' : ''}`}
               onClick={(e) => { e.stopPropagation(); toggleNode(nodeId); }}
             >

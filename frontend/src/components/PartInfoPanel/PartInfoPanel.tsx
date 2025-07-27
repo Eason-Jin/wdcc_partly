@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { GHCANode } from '../../services/api';
 import ImageModal from '../ImageModal/ImageModal';
 import './PartInfoPanel.css';
+import type { Part } from '../../types/part';
 
 interface PartInfoProps {
-  partInfo: GHCANode;
+  partInfo: Part;
 }
 
 const PartInfoPanel: React.FC<PartInfoProps> = ({ partInfo }) => {
@@ -13,15 +13,7 @@ const PartInfoPanel: React.FC<PartInfoProps> = ({ partInfo }) => {
   const [selectedImageDesc, setSelectedImageDesc] = useState<string>('');
 
   const getName = (): string => {
-    const enName = partInfo.names.find(n => n.language.startsWith('en'));
-    return enName ? enName.value : 'Unknown Part';
-  };
-
-  const getAliases = (): string[] => {
-    if (!partInfo.aliases || partInfo.aliases.length === 0) return [];
-    return partInfo.aliases
-      .filter(a => a.language.startsWith('en'))
-      .map(a => a.value);
+    return partInfo.names;
   };
 
   // Handler to open the image modal
@@ -44,33 +36,6 @@ const PartInfoPanel: React.FC<PartInfoProps> = ({ partInfo }) => {
         <span className="label">Part ID:</span>
         <span className="value">{partInfo.id}</span>
       </div>
-
-      {getAliases().length > 0 && (
-        <div className="part-section">
-          <h3 className="section-title">Also Known As</h3>
-          <ul className="aliases-list">
-            {getAliases().map((alias, index) => (
-              <li key={index}>{alias}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {partInfo.representation?.description?.function_purpose && 
-       partInfo.representation.description.function_purpose.length > 0 && (
-        <div className="part-section">
-          <h3 className="section-title">Function & Purpose</h3>
-          <p>{partInfo.representation.description.function_purpose.join(' ')}</p>
-        </div>
-      )}
-
-      {partInfo.representation?.description?.typical_material && 
-       partInfo.representation.description.typical_material.length > 0 && (
-        <div className="part-section">
-          <h3 className="section-title">Material</h3>
-          <p>{partInfo.representation.description.typical_material.join(' ')}</p>
-        </div>
-      )}
 
       {partInfo.representation?.examples && 
        partInfo.representation.examples.length > 0 && (

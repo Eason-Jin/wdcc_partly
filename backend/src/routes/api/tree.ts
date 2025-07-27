@@ -1,150 +1,95 @@
 import express, { Request, Response } from "express";
-import axios from "axios";
+import { createGetRequest, createPostRequest } from "./utils.js";
+import fs from "fs";
+import path from "path";
 import dotenv from "dotenv";
+import { Part } from "../../types/part.js";
 
 const router = express.Router();
-dotenv.config();
 
-const PARTLY_URL = process.env.PARTLY_URL;
-const PARTLY_API_KEY = process.env.PARTLY_API_KEY;
+const USE_LOCAL_DATA = false;
+const FILE_PATH = path.resolve(__dirname, "../data/world_tree.json");
 
-// Define TypeScript interfaces for the API data structures
-interface Name {
-  language: string;
-  value: string;
-}
-
-interface Description {
-  usage_notes?: string[];
-  typical_shape?: string[];
-  function_purpose?: string[];
-  typical_material?: string[];
-  typical_positioning?: string[];
-}
-
-interface Example {
-  image_url: string;
-  description: string;
-}
-
-interface Representation {
-  description?: Description;
-  examples?: Example[];
-}
-
-interface GHCANode {
-  id: string;
-  gapc_part_type_id: string;
-  gapc_position_id: string;
-  names: Name[];
-  aliases?: Name[];
-  children?: string[];
-  parent?: string;
-  order?: number;
-  representation?: Representation;
-}
-
-interface GAPCPartType {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  names: Name[];
-  aliases: Name[];
-  descriptions: any[];
-  department: string;
-  is_multi_purpose: boolean;
-  assembly_classification: string;
-  position_classification: string;
-  primary_fitment_classification: string;
-  uvdb_property_id_prefixes: string[];
-  recommended_attributes: string[];
-  categorizations: any[];
-  positions: any[];
-}
-
-interface GAPCPosition {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  names: Name[];
-  aliases: Name[];
-}
-
-interface WorldTreeResponse {
-  root_nodes: string[];
-  nodes: Record<string, GHCANode>;
-  gapc_part_types: Record<string, GAPCPartType>;
-  gapc_positions: Record<string, GAPCPosition>;
-}
-
-// Get World Tree data with specified number of layers
-router.get("/world", async (req: Request, res: Response) => {
-  try {
-    // Default to 2 layers if not specified
-    const numLayers = req.query.numLayers ? parseInt(req.query.numLayers as string) : 2;
-    
-    const requestBody = {
-      num_layers: numLayers,
-      tree_root_ghca_id: null, // Get full tree from root
-      languages: ["en-NZ", "en"]
-    };
-    
-    const response = await axios.post<WorldTreeResponse>(
-      `https://${PARTLY_URL}/api/v1/world-tree.search`,
-      requestBody,
-      {
-        headers: {
-          Authorization: `Bearer ${PARTLY_API_KEY}`,
-          "Content-Type": "application/json"
+/**
+ * Gets the entire world tree.
+ */
+router.get("/", async (req: Request, res: Response) => {
+    if (USE_LOCAL_DATA) {
+        try {
+            const data = fs.readFileSync(FILE_PATH, "utf-8");
+            res.status(200).json(JSON.parse(data));
+        } catch (error) {
+            console.error("Error reading local data:", error);
         }
-      }
-    );
-    
-    res.status(200).json(response.data);
-  } catch (error) {
-    console.error("Error fetching world tree:", error);
-    res.status(500).json({ error: "Failed to fetch World Tree data" });
-  }
-});
+    } else {
+        const requestBody =
+        {
+            // nesting limit - 8 will return the full tree - no need to go deeper.
+            "num_layers": 8,
+            "tree_root_ghca_id": null, // You can set the root if wanting a subtree.
+            "languages": [
+                "en-NZ",
+                "en"
+            ]
+        };
 
-// Get specific node information by GHCA ID
-router.get("/node/:ghcaId", async (req: Request, res: Response) => {
-  try {
-    const { ghcaId } = req.params;
-    
-    // Request the tree with the specific node as the root to get its subtree
-    const requestBody = {
-      num_layers: 1, // Just get the node and its immediate children
-      tree_root_ghca_id: ghcaId,
-      languages: ["en-NZ", "en"]
-    };
-    
-    const response = await axios.post<WorldTreeResponse>(
-      `https://${PARTLY_URL}/api/v1/world-tree.search`,
-      requestBody,
-      {
-        headers: {
-          Authorization: `Bearer ${PARTLY_API_KEY}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-    
-    // Extract just the requested node
-    const nodeData = response.data.nodes[ghcaId];
-    
-    if (!nodeData) {
-      return res.status(404).json({ error: "Node not found" });
+        createPostRequest("world-tree.search", requestBody).then((data) => {
+            res.status(200).json(data);
+        }).catch((error) => {
+            console.log(error);
+        });
     }
-    
-    res.status(200).json(nodeData);
-  } catch (error) {
-    console.error(`Error fetching node ${req.params.ghcaId}:`, error);
-    res.status(500).json({ error: "Failed to fetch node data" });
-  }
 });
 
-// Search for parts by name or alias
+/**
+ * Gets the tree for a specific root ID.
+ */
+router.get("/:root_id", async (req: Request, res: Response) => {
+    const { root_id } = req.params;
+
+    if (USE_LOCAL_DATA) {
+        const FILE_PATH = path.resolve(__dirname, "../../data/world_tree.json");
+        try {
+            const data = JSON.parse(fs.readFileSync(FILE_PATH, "utf-8"));
+            if (root_id && data.nodes[root_id]) {
+                res.status(200).json(data.nodes[root_id]);
+            } else {
+                res.status(404).json({ error: "Root ID not found in local data." });
+            }
+        } catch (error) {
+            console.error("Error reading local data:", error);
+        }
+    } else {
+        let requestBody;
+
+        if (!root_id) {
+            requestBody = {
+                "num_layers": 8,
+                "tree_root_ghca_id": null, // Get all the parts
+                "languages": [
+                    "en-NZ",
+                    "en"
+                ]
+            };
+        } else {
+            requestBody = {
+                "num_layers": 2,
+                "tree_root_ghca_id": root_id,
+                "languages": [
+                    "en-NZ",
+                    "en"
+                ]
+            };
+        }
+
+        createPostRequest("world-tree.search", requestBody).then((data) => {
+            res.status(200).json(data);
+        }).catch((error) => {
+            console.log(error);
+        });
+    }
+});
+
 router.get("/search", async (req: Request, res: Response) => {
   try {
     const query = (req.query.query as string)?.toLowerCase();
@@ -160,19 +105,10 @@ router.get("/search", async (req: Request, res: Response) => {
       languages: ["en-NZ", "en"]
     };
     
-    const response = await axios.post<WorldTreeResponse>(
-      `https://${PARTLY_URL}/api/v1/world-tree.search`,
-      requestBody,
-      {
-        headers: {
-          Authorization: `Bearer ${PARTLY_API_KEY}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
+    const response = await createPostRequest("world-tree.search", requestBody);
     
     const worldTreeData = response.data;
-    const searchResults: GHCANode[] = [];
+    const searchResults: Part[] = [];
     
     // Search through all nodes in the tree
     for (const nodeId in worldTreeData.nodes) {
@@ -198,7 +134,6 @@ router.get("/search", async (req: Request, res: Response) => {
     res.status(200).json(searchResults);
   } catch (error) {
     console.error("Error searching parts:", error);
-    res.status(500).json({ error: "Failed to search parts" });
   }
 });
 
