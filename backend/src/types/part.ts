@@ -6,13 +6,13 @@ export interface Part {
     children: string[];
     parent?: string;
     representation?: {
-        examples: RepresentationExample[];
+        examples: [
+            {
+                image_url: string;
+                description?: string;
+            }
+        ];
     };
-}
-
-export interface RepresentationExample {
-    image_url: string;
-    description?: string;
 }
 
 export interface PartType {

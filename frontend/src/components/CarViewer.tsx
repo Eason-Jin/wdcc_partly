@@ -7,7 +7,7 @@ import { addInteractivePoint } from './addInteractivePoint';
 function CarModel() {
   const gltf = useGLTF('/carModel/scene.gltf') // 注意路径是相对 public 的
   const sceneRef = useRef<THREE.Group>(null);
-  
+
   // set the scale of the model
   useEffect(() => {
     if (gltf.scene) {
@@ -21,24 +21,24 @@ function CarModel() {
       // Add a point marker on the car
       const rearCutPosition = new THREE.Vector3(0, 42, -80); // Adjust the position based on the model's scale and orientation
       const rearCutMarker = addInteractivePoint('RearCutMarker', rearCutPosition, 'Rear Cut');
-      rearCutMarker.scale.set(20, 20, 20); 
+      rearCutMarker.scale.set(20, 20, 20);
       sceneRef.current.add(rearCutMarker);
 
       const tailboardPosition = new THREE.Vector3(0, 30, -102);
       const tailboardMarker = addInteractivePoint('tailboardMarker', tailboardPosition, 'Tailboard Assembly');
-      tailboardMarker.scale.set(20, 20, 20); 
+      tailboardMarker.scale.set(20, 20, 20);
       sceneRef.current.add(tailboardMarker);
 
       const rearWindowPosition = new THREE.Vector3(0, 45, -55); // Adjust the position based on the model's scale and orientation
       const rearWindowMarker = addInteractivePoint('rearWindowMarker', rearWindowPosition, 'Rear Window');
-      rearWindowMarker.scale.set(20, 20, 20); 
+      rearWindowMarker.scale.set(20, 20, 20);
       sceneRef.current.add(rearWindowMarker);
     }
   }, []);
 
 
 
- return <primitive ref={sceneRef} object={gltf.scene} />;
+  return <primitive ref={sceneRef} object={gltf.scene} />;
 
 
 
@@ -62,7 +62,8 @@ function RotatingLight() {
   );
 }
 
-export default function CarViewer() {
+export default function CarViewer(props: { selectedPart: string | null }) {
+  console.log('Selected Part:', props.selectedPart);
   return (
     <Canvas camera={{ position: [0, 1, 5], fov: 50 }}>
       <RotatingLight />

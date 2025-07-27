@@ -2,6 +2,8 @@ import express, { Request, Response } from "express";
 import { createGetRequest, createPostRequest } from "./utils.js";
 import fs from "fs";
 import path from "path";
+import dotenv from "dotenv";
+import { Part } from "../../types/part.js";
 
 const router = express.Router();
 
@@ -86,6 +88,53 @@ router.get("/:root_id", async (req: Request, res: Response) => {
             console.log(error);
         });
     }
+});
+
+router.get("/search", async (req: Request, res: Response) => {
+  try {
+    const query = (req.query.query as string)?.toLowerCase();
+    
+    if (!query || query.trim() === '') {
+      return res.status(400).json({ error: "Search query is required" });
+    }
+    
+    // Get a broader tree to search through
+    const requestBody = {
+      num_layers: 3, // Get first few layers for efficient searching
+      tree_root_ghca_id: null,
+      languages: ["en-NZ", "en"]
+    };
+    
+    const response = await createPostRequest("world-tree.search", requestBody);
+    
+    const worldTreeData = response.data;
+    const searchResults: Part[] = [];
+    
+    // Search through all nodes in the tree
+    for (const nodeId in worldTreeData.nodes) {
+      const node = worldTreeData.nodes[nodeId];
+      
+      // Check node names
+      const nameMatch = node.names.some(name => 
+        name.language.startsWith("en") && 
+        name.value.toLowerCase().includes(query)
+      );
+      
+      // Check node aliases
+      const aliasMatch = node.aliases?.some(alias => 
+        alias.language.startsWith("en") && 
+        alias.value.toLowerCase().includes(query)
+      );
+      
+      if (nameMatch || aliasMatch) {
+        searchResults.push(node);
+      }
+    }
+    
+    res.status(200).json(searchResults);
+  } catch (error) {
+    console.error("Error searching parts:", error);
+  }
 });
 
 export default router;
