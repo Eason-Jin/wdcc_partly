@@ -1,17 +1,19 @@
 .part-info-panel {
-  
   margin-top: 0;
-  background-color: transparent;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  /* Remove scrollbar and height limitation */
+  max-height: none;
+  overflow-y: visible;
 }
 
 .part-title {
   margin-top: 0;
   margin-bottom: 12px;
   color: #2c3e50;
-  font-size: 22px; 
+  font-size: 20px; 
   font-weight: 600;
 }
 
@@ -92,3 +94,5 @@
   color: #7f8c8d;
   background-color: #f9f9f9;
 }
+
+/* Remove custom scrollbar styles */

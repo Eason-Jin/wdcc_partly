@@ -1,5 +1,4 @@
 import React, { ReactNode } from 'react';
-import Header from '../Header/Header';
 import './Layout.css';
 
 interface LayoutProps {
@@ -9,15 +8,12 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ sidebar, content }) => {
   return (
-    <div className="app-container">
-      <Header />
-      <div className="layout">
-        <div className="sidebar">
-          {sidebar}
-        </div>
-        <div className="content">
-          {content}
-        </div>
+    <div className="app-layout">
+      <div className="sidebar">
+        {sidebar}
+      </div>
+      <div className="main-content">
+        {content}
       </div>
     </div>
   );

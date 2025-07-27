@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GHCANode } from '../../services/api';
+import ImageModal from '../ImageModal/ImageModal';
 import './PartInfoPanel.css';
 
 interface PartInfoProps {
@@ -7,6 +8,10 @@ interface PartInfoProps {
 }
 
 const PartInfoPanel: React.FC<PartInfoProps> = ({ partInfo }) => {
+  // State for the image modal
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageDesc, setSelectedImageDesc] = useState<string>('');
+
   const getName = (): string => {
     const enName = partInfo.names.find(n => n.language.startsWith('en'));
     return enName ? enName.value : 'Unknown Part';
@@ -17,6 +22,18 @@ const PartInfoPanel: React.FC<PartInfoProps> = ({ partInfo }) => {
     return partInfo.aliases
       .filter(a => a.language.startsWith('en'))
       .map(a => a.value);
+  };
+
+  // Handler to open the image modal
+  const openImageModal = (imageUrl: string, description: string = '') => {
+    setSelectedImage(imageUrl);
+    setSelectedImageDesc(description);
+  };
+
+  // Handler to close the image modal
+  const closeImageModal = () => {
+    setSelectedImage(null);
+    setSelectedImageDesc('');
   };
 
   return (
@@ -61,7 +78,11 @@ const PartInfoPanel: React.FC<PartInfoProps> = ({ partInfo }) => {
           <h3 className="section-title">Images</h3>
           <div className="example-images">
             {partInfo.representation.examples.map((example, index) => (
-              <div key={index} className="example-image-container">
+              <div 
+                key={index} 
+                className="example-image-container"
+                onClick={() => openImageModal(example.image_url, example.description)}
+              >
                 <img 
                   src={example.image_url} 
                   alt={`${getName()} example ${index + 1}`}
@@ -75,6 +96,15 @@ const PartInfoPanel: React.FC<PartInfoProps> = ({ partInfo }) => {
           </div>
         </div>
       )}
+
+      {/* Image Modal */}
+      <ImageModal
+        imageUrl={selectedImage || ''}
+        description={selectedImageDesc}
+        altText={`${getName()} enlarged view`}
+        isOpen={selectedImage !== null}
+        onClose={closeImageModal}
+      />
     </div>
   );
 };
