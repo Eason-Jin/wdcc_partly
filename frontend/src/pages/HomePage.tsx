@@ -1,34 +1,51 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useContext, useEffect } from "react";
 import CarViewer from '../components/CarViewer';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+import { PartContext } from "../context/PartContext";
+import { dummyParts } from "../assets/data";
+import type { Part } from "../types/part";
 
 export default function HomePage() {
-    const [data, setData] = useState(String);
+    const { defaultParts, setDefaultParts, initaliseDefaultParts } = useContext(PartContext);
+    const USE_LOCAL_DATA = true;
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/api/auth`); // Adjust the endpoint as needed
-                setData(JSON.stringify(response.data, null, 2));
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-        fetchData();
-    }, []);
+        if (!USE_LOCAL_DATA) {
+            initaliseDefaultParts();
+        } else {
+            setDefaultParts(dummyParts);
+        }
+    })
+
+    const renderParts = (parts: Part[], level = 0) => {
+        return parts.map(part => (
+            <li key={part.id} style={{ marginLeft: `${level * 20}px` }}>
+                {part.id} - {part.type.name} ({part.position.position})
+                {part.children.length > 0 && (
+                    <ul>
+                        {renderParts(
+                            defaultParts.filter(child => part.children.includes(child.id)),
+                            level + 1
+                        )}
+                    </ul>
+                )}
+            </li>
+        ));
+    };
 
     return (
         <div>
             <h1>Home Page</h1>
-                <div style={{ height: '100vh', width: '100vw' }}>
+            <div style={{ height: '50vh', width: '100vw' }}>
                 <CarViewer />
-                </div>
-            {data ? (
-                <pre>{data}</pre>
+            </div>
+            {(defaultParts ? (
+                <ul>
+                    {renderParts(defaultParts)}
+                </ul>
             ) : (
                 <p>Loading...</p>
+            )
             )}
-        </div>
+        </div >
     );
 }
