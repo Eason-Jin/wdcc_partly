@@ -6,32 +6,8 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
-interface TreeJson {
-    root_nodes: string[];
-    nodes: Record<string, {
-        id: string;
-        gapc_part_type_id: string;
-        gapc_position_id: string;
-        names: { language: string; value: string }[];
-        children: string[];
-        parent: string | null;
-        representation: {
-            examples: { image_url: string }[];
-        };
-    }>;
-    gapc_part_types: Record<string, {
-        id: string;
-        names: { language: string; value: string }[];
-        is_multi_purpose: boolean;
-    }>;
-    gapc_positions: Record<string, {
-        id: string;
-        names: { language: string; value: string }[];
-    }>;
-}
-
 export interface PartContextType {
-    convertJson: (json: TreeJson) => Part;
+    convertJson: (json: string) => Part;
     defaultParts: Part[];
 }
 
@@ -40,50 +16,39 @@ export const PartContextProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
     const [defaultParts, setDefaultParts] = useState<Part[]>([]);
 
-    function convertJson(json: TreeJson): Part {
-        const rootId = json.root_nodes[0];
-        const rootNode = json.nodes[rootId];
+    function convertJson(jsonString: string): Part {
+        const jsonData = JSON.parse(jsonString);
+
+        const nodes = jsonData.nodes;
+        const partTypes = jsonData.gapc_part_types;
+        const positions = jsonData.gapc_positions;
+
+        const nodeId = Object.keys(nodes)[0]; // Assuming we are converting the first node
+        const node = nodes[nodeId];
+
+        const partType = partTypes[node.gapc_part_type_id];
+        const position = positions[node.gapc_position_id];
 
         return {
-            id: rootNode.id,
+            id: node.id,
             type: {
-                id: rootNode.gapc_part_type_id,
-                name: json.gapc_part_types[rootNode.gapc_part_type_id]?.names[0]?.value || "",
-                is_multi_purpose: json.gapc_part_types[rootNode.gapc_part_type_id]?.is_multi_purpose || false,
+                id: partType.id,
+                name: partType.names[0].value,
+                is_multi_purpose: partType.is_multi_purpose,
             },
             position: {
-                id: rootNode.gapc_position_id,
-                position: json.gapc_positions[rootNode.gapc_position_id]?.names[0]?.value || "",
+                id: position.id,
+                position: position.names[0].value,
             },
-            names: rootNode.names[0]?.value || "", // Use the first name's value
-            children: rootNode.children.map((childId) => {
-                const childNode = json.nodes[childId];
-                return {
-                    id: childNode.id,
-                    type: {
-                        id: childNode.gapc_part_type_id,
-                        name: json.gapc_part_types[childNode.gapc_part_type_id]?.names[0]?.value || "",
-                        is_multi_purpose: json.gapc_part_types[childNode.gapc_part_type_id]?.is_multi_purpose || false,
-                    },
-                    position: {
-                        id: childNode.gapc_position_id,
-                        position: json.gapc_positions[childNode.gapc_position_id]?.names[0]?.value || "",
-                    },
-                    names: childNode.names[0]?.value || "",
-                    children: [], // Assume no deeper nesting for simplicity
-                    parent_id: childNode.parent,
-                    example_images: childNode.representation.examples.map((example) => example.image_url),
-                };
-            }),
-            parent_id: rootNode.parent,
-            example_images: rootNode.representation.examples.map((example) => example.image_url),
+            names: node.names[0].value,
+            children: node.children,
         };
     }
 
     async function fetchPart(id: string): Promise<Part | null> {
         try {
             const response = await axios.get(`${API_BASE_URL}/api/tree/${id}`);
-            return convertJson(response.data);
+            return convertJson(JSON.stringify(response.data));
         } catch (error) {
             console.error("Error fetching part:", error);
             return null;
@@ -112,9 +77,9 @@ export const PartContextProvider: React.FC<{ children: ReactNode }> = ({
                 visited.add(currentPart.id);
                 parts.push(currentPart);
 
-                for (const child of currentPart.children) {
-                    if (!visited.has(child.id)) {
-                        const childPart = await fetchPart(child.id);
+                for (const child of currentPart.children || []) {
+                    if (!visited.has(child)) {
+                        const childPart = await fetchPart(child);
                         if (childPart) {
                             queue.push(childPart);
                         }

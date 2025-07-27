@@ -1,31 +1,24 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useContext } from "react";
 import CarViewer from '../components/CarViewer';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+import { PartContext } from "../context/PartContext";
 
 export default function HomePage() {
-    const [data, setData] = useState(String);
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/api/tree`);
-                setData(JSON.stringify(response.data, null, 2));
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-        fetchData();
-    }, []);
+    const { defaultParts } = useContext(PartContext);
 
     return (
         <div>
             <h1>Home Page</h1>
-                <div style={{ height: '100vh', width: '100vw' }}>
+            <div style={{ height: '50vh', width: '100vw' }}>
                 <CarViewer />
-                </div>
-            {data ? (
-                <pre>{data}</pre>
+            </div>
+            {defaultParts ? (
+                <ul>
+                    {defaultParts.map(part => (
+                        <li key={part.id}>
+                            {part.id} - {part.type.name} ({part.position.position})
+                        </li>
+                    ))}
+                </ul>
             ) : (
                 <p>Loading...</p>
             )}

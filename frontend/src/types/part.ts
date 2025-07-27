@@ -3,9 +3,7 @@ export interface Part {
     type: PartType;
     position: PartPosition;
     names: string; // ignore aliases for now
-    children: Part[];
-    parent_id: string | null;
-    example_images: string[];
+    children: string[];
 }
 
 export interface PartType {
